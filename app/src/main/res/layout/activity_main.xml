@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/mainLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <!-- Obszar sterowania prawy -->
+    <View
+        android:id="@+id/controlRight"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_gravity="bottom|right"
+        android:layout_marginRight="17dp"
+        android:layout_marginBottom="73dp"
+        android:background="#66FFFFFF" />
+
+    <!-- Obszar sterowania lewy -->
+    <View
+        android:id="@+id/controlLeft"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_gravity="bottom|right"
+        android:layout_marginRight="127dp"
+        android:layout_marginBottom="73dp"
+        android:background="#66FFFFFF" />
+
+    <!-- Obszar sterowania góra -->
+    <View
+        android:id="@+id/controlTop"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_gravity="bottom"
+        android:layout_marginStart="15dp"
+        android:layout_marginLeft="15dp"
+        android:layout_marginBottom="123dp"
+        android:background="#66FFFFFF" />
+
+    <!-- Obszar sterowania dół -->
+    <View
+        android:id="@+id/controlDown"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_gravity="bottom"
+        android:layout_marginStart="15dp"
+        android:layout_marginLeft="15dp"
+        android:layout_marginBottom="17dp"
+        android:background="#66FFFFFF" />
+
+    <!-- Plansza -->
+    <GridLayout
+        android:id="@+id/boardGridLayout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|left"
+        android:layout_margin="0dp"
+        android:layout_marginLeft="0dp"
+        android:layout_marginTop="0dp"
+        android:layout_marginRight="0dp"
+        android:layout_marginBottom="0dp"
+        android:foregroundGravity="top|left"
+        android:padding="0dp"
+        android:paddingLeft="0dp"
+        android:paddingTop="0dp"
+        android:paddingRight="0dp"
+        android:paddingBottom="0dp"
+        android:visibility="visible"
+        tools:visibility="visible" />
+
+    <!-- Rockford -->
+    <ImageView
+        android:id="@+id/sprite_view"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_gravity="center_horizontal|fill"
+        android:contentDescription="TODO" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_gravity="bottom"
+        android:layout_marginBottom="16dp"
+        android:padding="8dp"
+        android:background="#AA000000"
+        android:gravity="center">
+
+        <!-- Punkty -->
+        <TextView
+            android:id="@+id/scoreTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Punkty: 0"
+            android:textSize="18sp"
+            android:textColor="#FFFFFF"
+            android:layout_marginEnd="16dp" />
+
+        <!-- Życia -->
+        <TextView
+            android:id="@+id/livesTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Życia: 3"
+            android:textSize="18sp"
+            android:textColor="#FFFFFF"
+        />
+</LinearLayout>
+
+
+    </FrameLayout>
