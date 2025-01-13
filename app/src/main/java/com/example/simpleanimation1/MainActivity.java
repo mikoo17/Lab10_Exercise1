@@ -25,7 +25,7 @@ public class MainActivity extends AppCompatActivity {
 
    private SoundPool soundPool;
    private int soundStep1, soundStep2, soundMainTheme, soundDiamondCollect, soundDiamondFall, soundExitOpen, soundRockfordAppear, soundStartGame, soundStoneFall;
-
+   private boolean isExitOpen = false;
    int VISIBLE_AREA_WIDTH;
    int VISIBLE_AREA_HEIGHT;
    private int GRID_CELL_SIZE = 64;
@@ -49,8 +49,9 @@ public class MainActivity extends AppCompatActivity {
          {'b','g','g','g','g','g','g','g','w','g','g','g','g','g','g','g','w','g','g','g','e','g','g','w','g','g','g','g','g','b'},
          {'b','e','e','e','e','e','e','e','e','e','e','e','e','e','e','s','e','s','s','e','e','e','e','e','s','e','e','s','g','b'},
          {'b','g','g','g','g','g','g','g','w','g','s','g','g','g','g','s','w','g','s','g','e','g','g','w','g','g','g','s','d','b'},
-         {'b','g','g','g','g','g','g','m','w','g','s','g','g','g','g','s','w','g','s','g','e','g','g','w','g','g','g','s','d','b'},
-         {'b','w','w','w','w','w','w','w','w','w','w','w','w','w','w','w','w','g','w','w','e','w','w','w','w','w','w','w','w','b'}, {'b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b'},
+         {'b','g','g','g','g','g','g','m','w','o','s','g','g','g','g','s','w','g','s','g','e','g','g','w','g','g','g','s','d','b'},
+         {'b','w','w','w','w','w','w','w','w','w','w','w','w','w','w','w','w','g','w','w','e','w','w','w','w','w','w','w','w','b'},
+         {'b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b'},
       }; //mapa
 
    private ImageView imageView;
@@ -142,11 +143,12 @@ public class MainActivity extends AppCompatActivity {
       boardGridLayout = new GridLayout(this);
       boardGridLayout.setColumnCount(mapa[0].length); // liczba kolumn
       boardGridLayout.setRowCount(mapa.length);       // liczba wierszy
+      int height = Math.max(mapa.length * GRID_CELL_SIZE, 1920);
 
       // Ustawiamy LayoutParams dla boardGridLayout
       FrameLayout.LayoutParams gridLayoutParams = new FrameLayout.LayoutParams(
               mapa[0].length * GRID_CELL_SIZE,
-              mapa.length * GRID_CELL_SIZE
+              height
       );
       boardGridLayout.setLayoutParams(gridLayoutParams);
 
@@ -184,6 +186,10 @@ public class MainActivity extends AppCompatActivity {
                   break;
                case 'x':
                   imageView.setImageResource(R.drawable.butterfly_32x32);
+                  break;
+
+               case 'o':
+                  imageView.setImageResource(R.drawable.exit_closed);
                   break;
             }
 
@@ -359,6 +365,10 @@ public class MainActivity extends AppCompatActivity {
             increaseScore();
             playSound(soundDiamondCollect);
             break;
+         case 'o':
+            if(isExitOpen){
+               winGame();
+            }
       }
       imageView.setX(imageX);
       imageView.setY(imageY);
@@ -462,6 +472,7 @@ public class MainActivity extends AppCompatActivity {
          case 's':
             cell.setImageResource(R.drawable.stone_32x32);
             break;
+
       }
    }
 
@@ -472,12 +483,12 @@ public class MainActivity extends AppCompatActivity {
    }
 
    private boolean isPassable(char cell) {
-      return cell == 'e' || cell == 'g' || cell == 'd' || cell == 'm'; // Rockford może przejść tylko przez te typy
+      return cell == 'e' || cell == 'g' || cell == 'd' || cell == 'm' || cell =='o'; // Rockford może przejść tylko przez te typy
 
    }
 
    private boolean isPassableHorizontal(char cell) {
-      return cell == 'e' || cell == 'g' || cell == 'd' || cell == 'm' || cell == 's'; // Rockford może przejść tylko przez te typy
+      return cell == 'e' || cell == 'g' || cell == 'd' || cell == 'm' || cell == 's'|| cell =='o'; // Rockford może przejść tylko przez te typy
 
    }
 
@@ -494,7 +505,7 @@ public class MainActivity extends AppCompatActivity {
       score += 10; // Zwiększ liczbę punktów
       scoreTextView.setText("Punkty: " + score);
 
-      if(score == 110) winGame();
+      if(score == 110) openGate();
    }
 
    private void endGame() {
@@ -506,16 +517,15 @@ public class MainActivity extends AppCompatActivity {
       // Ustaw widoczność napisu "Game Over"
       gameOverText.setVisibility(View.VISIBLE);
 
-      // Dodatkowo możesz dodać opóźnienie, aby dać czas na zobaczenie napisu przed zamknięciem gry
-      new Handler().postDelayed(new Runnable() {
-         @Override
-         public void run() {
-            // Zamknij grę po 2 sekundach
-            finish();
-         }
-      }, 2000); // 2000 ms = 2 sekundy
+      closeApp();
    }
-
+   private void openGate(){
+      int index = 519;
+      ImageView cell = (ImageView) boardGridLayout.getChildAt(index); // Pobierz ImageView dla pola
+      cell.setImageResource(R.drawable.exit_open);
+      playSound(soundExitOpen);
+      isExitOpen = true;
+   }
    private void winGame() {
       handler.removeCallbacksAndMessages(null); // Zatrzymaj animację
 
@@ -525,6 +535,10 @@ public class MainActivity extends AppCompatActivity {
       // Ustaw widoczność napisu "You Win!"
       winText.setVisibility(View.VISIBLE);
 
+      closeApp();
+   }
+
+   private void closeApp(){
       // Dodatkowo możesz dodać opóźnienie, aby dać czas na zobaczenie napisu przed zamknięciem gry
       new Handler().postDelayed(new Runnable() {
          @Override
@@ -536,11 +550,15 @@ public class MainActivity extends AppCompatActivity {
    }
 
 
-
    private void applyGravity() {
       Runnable gravityRunnable = new Runnable() {
          @Override
          public void run() {
+            // Get Rockford's position (row and col)
+            int[] position = getRockfordPosition();
+            int rockfordRow = position[0];
+            int rockfordCol = position[1];
+
             // Przesuwamy kamienie w dół, jeden wiersz na raz
             for (int row = mapa.length - 2; row >= 0; row--) {
                for (int col = 0; col < mapa[0].length; col++) {
@@ -554,7 +572,7 @@ public class MainActivity extends AppCompatActivity {
                      updateBoardCell(row + 1, col); // Uaktualniamy planszę
 
                      // Jeśli kamień spada na Rockforda
-                     if (imageY == (row + 1) * deltaY && imageX == col * deltaX) {
+                     if (rockfordRow == row + 1 && rockfordCol == col) {
                         loseLife();
                         playSound(soundStoneFall);
                      }
@@ -562,7 +580,7 @@ public class MainActivity extends AppCompatActivity {
                }
             }
 
-            // Ponownie wywołujemy grawitację po pewnym czasie (co 300ms)
+            // Ponownie wywołujemy grawitację po pewnym czasie (co 500ms)
             handler.postDelayed(this, 500);
          }
       };
@@ -570,6 +588,7 @@ public class MainActivity extends AppCompatActivity {
       // Uruchamiamy grawitację
       handler.post(gravityRunnable);
    }
+
 
    // Funkcja odtwarzająca dźwięki
    private void playSound(int soundId) {
