@@ -6,13 +6,16 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.GridLayout;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.media.SoundPool;
+import android.media.AudioAttributes;
 
 public class MainActivity extends AppCompatActivity {
    private enum RockfordDo {stand,idle,left,right,appear,die};
@@ -20,30 +23,34 @@ public class MainActivity extends AppCompatActivity {
    private int frameCount = 7; // Ilość klatek w spritesheecie
    private int frameWidth; // szerokość pojedynczej klatki
 
+   private SoundPool soundPool;
+   private int soundStep1, soundStep2, soundMainTheme, soundDiamondCollect, soundDiamondFall, soundExitOpen, soundRockfordAppear, soundStartGame, soundStoneFall;
+
+   int VISIBLE_AREA_WIDTH;
+   int VISIBLE_AREA_HEIGHT;
+   private int GRID_CELL_SIZE = 64;
+
    private GridLayout boardGridLayout; // GridLayout dla planszy
    private Character mapa[][]={
          {'b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b'},
          {'b','g','s','g','g','s','d','g','w','g','s','g','g','g','s','g','w','g','g','g','e','g','s','w','g','g','e','g','g','b'},
          {'b','g','g','g','g','g','g','g','w','g','g','g','g','g','g','g','w','g','g','g','e','g','g','w','g','g','g','g','g','b'},
-         {'b','e','e','e','e','e','e','s','e','e','s','e','e','e','e','s','e','s','s','e','e','e','e','e','s','e','e','s','g','b'},
+         {'b','e','e','e','e','e','e','s','e','e','s','e','e','e','e','s','e','g','e','e','e','e','e','e','g','e','e','s','g','b'},
          {'b','d','g','g','g','g','g','g','w','g','s','g','g','g','g','s','w','g','s','g','e','g','g','w','g','g','g','s','d','b'},
          {'b','g','g','g','g','g','g','m','w','g','s','g','g','g','g','s','w','g','s','g','e','g','g','w','g','g','g','s','d','b'},
-         {'b','w','w','w','w','w','w','w','w','w','w','w','w','w','w','w','w','g','w','w','e','w','w','w','w','w','w','w','w','b'},
+         {'b','w','w','g','w','w','w','w','w','w','w','w','w','w','w','w','w','g','w','w','e','w','w','w','w','w','w','w','w','b'},
          {'b','g','s','g','g','s','d','g','w','g','s','g','g','g','s','g','w','g','g','g','e','g','s','w','g','g','e','g','g','b'},
          {'b','g','g','g','g','g','g','g','w','g','g','g','g','g','g','g','w','g','g','g','e','g','g','w','g','g','g','g','g','b'},
-         {'b','e','e','e','e','e','e','e','e','e','e','e','e','e','e','s','e','s','s','e','e','e','e','e','s','e','e','s','g','b'},
+         {'b','e','e','e','e','e','e','e','e','e','e','e','e','e','e','s','e','e','e','e','e','e','e','e','e','e','e','s','g','b'},
          {'b','m','g','g','g','g','g','s','w','g','s','g','g','g','g','s','w','g','s','g','e','g','g','w','g','g','g','s','d','b'},
          {'b','g','g','g','d','g','s','s','w','g','s','g','g','g','g','s','w','g','s','g','e','g','g','w','g','g','g','s','d','b'},
-         {'b','w','w','w','w','w','w','w','w','w','w','w','w','w','w','w','w','g','w','w','e','w','w','w','w','w','w','w','w','b'},
+         {'b','w','w','g','w','w','w','w','w','w','w','w','w','w','w','w','w','g','w','w','e','w','w','w','w','w','w','w','w','b'},
          {'b','g','s','g','g','s','d','g','w','g','s','g','g','g','s','g','w','g','g','g','e','g','s','w','g','g','e','g','g','b'},
          {'b','g','g','g','g','g','g','g','w','g','g','g','g','g','g','g','w','g','g','g','e','g','g','w','g','g','g','g','g','b'},
          {'b','e','e','e','e','e','e','e','e','e','e','e','e','e','e','s','e','s','s','e','e','e','e','e','s','e','e','s','g','b'},
          {'b','g','g','g','g','g','g','g','w','g','s','g','g','g','g','s','w','g','s','g','e','g','g','w','g','g','g','s','d','b'},
          {'b','g','g','g','g','g','g','m','w','g','s','g','g','g','g','s','w','g','s','g','e','g','g','w','g','g','g','s','d','b'},
-         {'b','w','w','w','w','w','w','w','w','w','w','w','w','w','w','w','w','g','w','w','e','w','w','w','w','w','w','w','w','b'},
-
-
-         {'b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b'},
+         {'b','w','w','w','w','w','w','w','w','w','w','w','w','w','w','w','w','g','w','w','e','w','w','w','w','w','w','w','w','b'}, {'b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b','b'},
       }; //mapa
 
    private ImageView imageView;
@@ -59,17 +66,17 @@ public class MainActivity extends AppCompatActivity {
    private int idleTimer=0;
    private int idletime=40;
    private int scale = 1; // Współczynnik powiększenia
-   private float imageX=88 , imageY =88;  // współrzędne Rockforda
+   private float imageX=64 , imageY =64;  // współrzędne Rockforda
    private boolean movingUp, movingDown, movingLeft, movingRight;
-   private float deltaX = 82; // przesunięcie Rockforda prawo lewo
-   private float deltaY = 82; // przesunięcie Rockforda góra dół
+   private float deltaX = 64; // przesunięcie Rockforda prawo lewo
+   private float deltaY = 64; // przesunięcie Rockforda góra dół
    private int score = 0;  // Liczba punktów
    private int lives = 3;  // Liczba żyć
    private float boardOffsetX = 0f; // Przesunięcie planszy w poziomie
    private float boardOffsetY = 0f; // Przesunięcie planszy w pionie
    private FrameLayout mainLayout;
 
-   // Definicja obszarów sterowania
+
    private View topControl, bottomControl, leftControl, rightControl;
 
    @Override
@@ -79,7 +86,6 @@ public class MainActivity extends AppCompatActivity {
 
       mainLayout = findViewById(R.id.mainLayout); // Pobieramy RelativeLayout z layoutu
       mainLayout.setBackgroundColor(getResources().getColor(android.R.color.black)); // Ustawiamy czarne tło
-      // Inicjalizacja planszy w GridLayout
       initBoardGridLayout();
 
       scoreTextView = findViewById(R.id.scoreTextView);
@@ -91,62 +97,118 @@ public class MainActivity extends AppCompatActivity {
       spritesheet_rockford_idle = BitmapFactory.decodeResource(getResources(),R.drawable.rockford_idle_32x32);
       spritesheet_rockford_left = BitmapFactory.decodeResource(getResources(),R.drawable.rockford_left_32x32);
       spritesheet_rockford_right = BitmapFactory.decodeResource(getResources(),R.drawable.rockford_right_32x32);
-      // Obliczamy szerokość pojedynczej klatki
+
       frameWidth = spritesheet_rockford_stand.getWidth() / frameCount;
-      // Ustawiamy szerokość ImageView na szerokość pojedynczej klatki, pomnożoną przez współczynnik powiększenia
+
       imageView.getLayoutParams().width = frameWidth * scale;
       imageView.getLayoutParams().height = spritesheet_rockford_stand.getHeight() * scale; // Ustawiamy wysokość proporcjonalnie do powiększenia
-      // imageView.requestLayout();
+      imageView.requestLayout();
       // Inicjalizacja obszarów sterowania
       topControl = findViewById(R.id.controlTop);
       bottomControl = findViewById(R.id.controlDown);
       leftControl = findViewById(R.id.controlLeft);
       rightControl = findViewById(R.id.controlRight);
-      // Ustawiamy obszary sterowania jako dotykowe
+
+      VISIBLE_AREA_WIDTH = mainLayout.getWidth();
+      VISIBLE_AREA_HEIGHT = mainLayout.getHeight();
+
+      AudioAttributes audioAttributes = new AudioAttributes.Builder()
+              .setUsage(AudioAttributes.USAGE_GAME)
+              .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+              .build();
+
+      soundPool = new SoundPool.Builder()
+              .setMaxStreams(10)
+              .setAudioAttributes(audioAttributes)
+              .build();
+
+      soundStep1 = soundPool.load(this, R.raw.krok, 1);
+      soundStep2 = soundPool.load(this, R.raw.krok2, 1);
+      soundMainTheme = soundPool.load(this, R.raw.main_theme, 1);
+      soundDiamondCollect = soundPool.load(this, R.raw.diamond_collect, 1);
+      soundDiamondFall = soundPool.load(this, R.raw.diamond_fall, 1);
+      soundExitOpen = soundPool.load(this, R.raw.exit_open, 1);
+      soundRockfordAppear = soundPool.load(this, R.raw.rockford_appear, 1);
+      soundStartGame = soundPool.load(this, R.raw.start_game, 1);
+      soundStoneFall = soundPool.load(this, R.raw.stone_fall, 1);
+
+      playSound(soundMainTheme);
+
       setTouchListeners();
-      // Uruchamiamy animację
       startAnimation();
    }
 
    private void initBoardGridLayout() {
-      // Tworzymy planszę w GridLayout
       boardGridLayout = new GridLayout(this);
       boardGridLayout.setColumnCount(mapa[0].length); // liczba kolumn
-      boardGridLayout.setRowCount(mapa.length);    // liczba wierszy
+      boardGridLayout.setRowCount(mapa.length);       // liczba wierszy
+
+      // Ustawiamy LayoutParams dla boardGridLayout
+      FrameLayout.LayoutParams gridLayoutParams = new FrameLayout.LayoutParams(
+              mapa[0].length * GRID_CELL_SIZE,
+              mapa.length * GRID_CELL_SIZE
+      );
+      boardGridLayout.setLayoutParams(gridLayoutParams);
+
       // Tworzymy obiekty ImageView i dodajemy je do planszy
       for (int i = 0; i < mapa.length; i++) {
          for (int j = 0; j < mapa[0].length; j++) {
             ImageView imageView = new ImageView(this);
             GridLayout.LayoutParams params = new GridLayout.LayoutParams();
-            //params.height = 64;
-            //params.width = 64;
-            //imageView.setLayoutParams(params);
-            switch (mapa[i][j]){
+            params.width = GRID_CELL_SIZE;
+            params.height = GRID_CELL_SIZE;
+            imageView.setLayoutParams(params);
+            imageView.setVisibility(View.VISIBLE);
+
+            switch (mapa[i][j]) {
                case 'b':
-                  imageView.setImageResource(R.drawable.border_32x32);                  break;
+                  imageView.setImageResource(R.drawable.border_32x32);
+                  break;
                case 'w':
-                  imageView.setImageResource(R.drawable.wall_32x32);                  break;
+                  imageView.setImageResource(R.drawable.wall_32x32);
+                  break;
                case 's':
-                  imageView.setImageResource(R.drawable.stone_32x32);                  break;
+                  imageView.setImageResource(R.drawable.stone_32x32);
+                  break;
                case 'g':
-                  imageView.setImageResource(R.drawable.ground_32x32);                  break;
+                  imageView.setImageResource(R.drawable.ground_32x32);
+                  break;
                case 'e':
-                  imageView.setImageResource(R.drawable.empty_32x32);                  break;
+                  imageView.setImageResource(R.drawable.empty_32x32);
+                  break;
                case 'm':
-                  imageView.setImageResource(R.drawable.mob_32x32);                  break;
+                  imageView.setImageResource(R.drawable.mob_32x32);
+                  break;
                case 'd':
-                  imageView.setImageResource(R.drawable.diamond_32x32);                  break;
+                  imageView.setImageResource(R.drawable.diamond_32x32);
+                  break;
                case 'x':
-                  imageView.setImageResource(R.drawable.butterfly_32x32);                  break;
+                  imageView.setImageResource(R.drawable.butterfly_32x32);
+                  break;
             }
-            boardGridLayout.addView(imageView);
+
+                 boardGridLayout.addView(imageView);
          }
       }
-      // Pobieramy FrameeLayout z layoutu
+
+      // Znajdujemy główny layout
       FrameLayout mainLayout = findViewById(R.id.mainLayout);
-      // Dodajemy planszę do RelativeLayout
-      mainLayout.addView(boardGridLayout,0);
+
+      // Sprawdzamy LayoutParams dla mainLayout i ustawiamy jego rozmiar
+      if (mainLayout.getLayoutParams() == null) {
+         mainLayout.setLayoutParams(new FrameLayout.LayoutParams(
+                 FrameLayout.LayoutParams.WRAP_CONTENT,
+                 FrameLayout.LayoutParams.WRAP_CONTENT
+         ));
+      }
+      ViewGroup.LayoutParams mainLayoutParams = mainLayout.getLayoutParams();
+      mainLayoutParams.width = mapa[0].length * GRID_CELL_SIZE;
+      mainLayoutParams.height = mapa.length * GRID_CELL_SIZE;
+      mainLayout.setLayoutParams(mainLayoutParams);
+
+      mainLayout.addView(boardGridLayout, 0);
    }
+
 
    private void setTouchListeners() {
       topControl.setOnTouchListener(new View.OnTouchListener() {
@@ -219,19 +281,22 @@ public class MainActivity extends AppCompatActivity {
    }
 
    private void moveRockford() {
-
       int[] position = getRockfordPosition();
       int row = position[0];
       int col = position[1];
-
-       // Pobierz ImageView dla pola
+      boolean ismoving = false;
+       int GRID_CELL_SIZE = 64; // Rozmiar jednej komórki planszy (w pikselach)
 
       if (movingUp && row > 0 && isPassable(mapa[row - 1][col])) {
          imageY -= deltaY;
          row--;
+         ismoving = true;
+         playSound(soundStep1);
       } else if (movingDown && row < mapa.length - 1 && isPassable(mapa[row + 1][col])) {
          imageY += deltaY;
          row++;
+         ismoving = true;
+         playSound(soundStep2);
       } else if (movingLeft && col > 0 && isPassableHorizontal(mapa[row][col - 1])) {
          if(mapa[row][col - 1] == 's'){
             if (mapa[row][col - 2] =='e')
@@ -240,12 +305,15 @@ public class MainActivity extends AppCompatActivity {
 
                imageX -= deltaX;
                col--;
+               ismoving = true;
+               playSound(soundStep1);
             }
-
          }
          else {
             imageX -= deltaX;
             col--;
+            ismoving = true;
+            playSound(soundStep1);
          }
       } else if (movingRight && col < mapa[0].length - 1 && isPassableHorizontal(mapa[row][col + 1])) {
 
@@ -256,15 +324,19 @@ public class MainActivity extends AppCompatActivity {
 
                imageX += deltaX;
                col++;
+               ismoving = true;
+               playSound(soundStep2);
             }
-
          }
          else {
             imageX += deltaX;
             col++;
+            ismoving = true;
+            playSound(soundStep2);
          }
-
       }
+      if (ismoving) moveCamera();
+
 
       char currentCell = mapa[row][col];
       switch (currentCell) {
@@ -285,12 +357,9 @@ public class MainActivity extends AppCompatActivity {
             mapa[row][col] = 'e';
             updateBoardCell(row, col);
             increaseScore();
+            playSound(soundDiamondCollect);
             break;
       }
-
-      // Przesuwanie kamery
-      adjustCamera();
-
       imageView.setX(imageX);
       imageView.setY(imageY);
    }
@@ -304,7 +373,6 @@ public class MainActivity extends AppCompatActivity {
       mapa[row][col+first] = 'e';
       mapa[row][col+second] = 's';
 
-
       ImageView empty_cell = (ImageView) boardGridLayout.getChildAt( row * mapa[0].length + col + first);
       empty_cell.setImageResource(R.drawable.empty_32x32);
 
@@ -312,13 +380,36 @@ public class MainActivity extends AppCompatActivity {
       stone_cell.setImageResource(R.drawable.stone_32x32);
    }
 
+   private void moveCamera(){
+      int OFFSET_THRESHOLD = GRID_CELL_SIZE * 2; // Próg przesunięcia mapy
+      if (imageX < 64*4){
+         boardOffsetX += 64*6;
+         boardGridLayout.setTranslationX(boardOffsetX);
+         imageX += 64*6;
+      }
+      else if(imageX > 1080 -64*4){
+         boardOffsetX -= 64*6;
+         boardGridLayout.setTranslationX(boardOffsetX);
+         imageX -= 64*6;
+      }
+
+      if (imageY <64){
+         boardOffsetY += 64*6;
+         boardGridLayout.setTranslationY(boardOffsetY);
+         imageY +=64*6;
+      }
+      else if(imageY > 1920 -64*3){
+         boardOffsetY -= 64*6;
+         boardGridLayout.setTranslationY(boardOffsetY);
+         imageY -= 64*6;
+      }
+
+   }
 
    private void startAnimation() {
       Runnable animationRunnable = new Runnable() {
          @Override
          public void run() {
-            // Ustawiamy kolejną klatkę animacji
-            // Wycinamy fragment z spritesheeta odpowiadający danej klatce i ustawiamy w ImageView
             Bitmap frame;
             switch (rockfordDo){
             case stand:
@@ -350,9 +441,7 @@ public class MainActivity extends AppCompatActivity {
                idleTimer=0;
                break;
          }
-            // Inkrementujemy indeks klatki
             frameIndex = (frameIndex + 1) % frameCount;
-            // Wywołujemy ponownie runnable po pewnym czasie dla następnej klatki
             handler.postDelayed(this, 100); // Ustaw czas opóźnienia między klatkami (tutaj 100ms)
          }
       };
@@ -373,13 +462,12 @@ public class MainActivity extends AppCompatActivity {
          case 's':
             cell.setImageResource(R.drawable.stone_32x32);
             break;
-         // Możesz dodać inne typy, jeśli to konieczne
       }
    }
 
    private int[] getRockfordPosition() {
-      int col = (int) (imageX / deltaX); // Oblicz indeks kolumny
-      int row = (int) (imageY / deltaY); // Oblicz indeks wiersza
+      int row = (int) ((imageY - boardOffsetY) / 64);
+      int col = (int) ((imageX - boardOffsetX) / 64);
       return new int[]{row, col};
    }
 
@@ -394,7 +482,6 @@ public class MainActivity extends AppCompatActivity {
    }
 
    private void loseLife() {
-      // Zmniejsz życie gracza
       lives--;
       if (lives <= 0) {
          endGame();
@@ -406,13 +493,49 @@ public class MainActivity extends AppCompatActivity {
    private void increaseScore() {
       score += 10; // Zwiększ liczbę punktów
       scoreTextView.setText("Punkty: " + score);
+
+      if(score == 110) winGame();
    }
 
    private void endGame() {
-      // Wyświetl komunikat o przegranej i zakończ grę
       handler.removeCallbacksAndMessages(null); // Zatrzymaj animację
-      finish();
+
+      // Pobierz odniesienie do TextView
+      TextView gameOverText = findViewById(R.id.gameOverText);
+
+      // Ustaw widoczność napisu "Game Over"
+      gameOverText.setVisibility(View.VISIBLE);
+
+      // Dodatkowo możesz dodać opóźnienie, aby dać czas na zobaczenie napisu przed zamknięciem gry
+      new Handler().postDelayed(new Runnable() {
+         @Override
+         public void run() {
+            // Zamknij grę po 2 sekundach
+            finish();
+         }
+      }, 2000); // 2000 ms = 2 sekundy
    }
+
+   private void winGame() {
+      handler.removeCallbacksAndMessages(null); // Zatrzymaj animację
+
+      // Pobierz odniesienie do TextView
+      TextView winText = findViewById(R.id.winText);
+
+      // Ustaw widoczność napisu "You Win!"
+      winText.setVisibility(View.VISIBLE);
+
+      // Dodatkowo możesz dodać opóźnienie, aby dać czas na zobaczenie napisu przed zamknięciem gry
+      new Handler().postDelayed(new Runnable() {
+         @Override
+         public void run() {
+            // Zamknij grę po 2 sekundach
+            finish();
+         }
+      }, 2000); // 2000 ms = 2 sekundy
+   }
+
+
 
    private void applyGravity() {
       Runnable gravityRunnable = new Runnable() {
@@ -423,6 +546,7 @@ public class MainActivity extends AppCompatActivity {
                for (int col = 0; col < mapa[0].length; col++) {
                   // Sprawdzamy, czy komórka zawiera kamień
                   if (mapa[row][col] == 's' && mapa[row + 1][col] == 'e') {
+                     playSound(soundStoneFall);
                      // Zamieniamy kamień i puste pole
                      mapa[row + 1][col] = 's';
                      mapa[row][col] = 'e';
@@ -432,13 +556,14 @@ public class MainActivity extends AppCompatActivity {
                      // Jeśli kamień spada na Rockforda
                      if (imageY == (row + 1) * deltaY && imageX == col * deltaX) {
                         loseLife();
+                        playSound(soundStoneFall);
                      }
                   }
                }
             }
 
             // Ponownie wywołujemy grawitację po pewnym czasie (co 300ms)
-            handler.postDelayed(this, 300);
+            handler.postDelayed(this, 500);
          }
       };
 
@@ -446,50 +571,10 @@ public class MainActivity extends AppCompatActivity {
       handler.post(gravityRunnable);
    }
 
-   private void adjustCamera() {
-      int screenCenterX = mainLayout.getWidth() / 2;
-      int screenCenterY = mainLayout.getHeight() / 2;
-
-      float rockfordScreenX = imageX - boardOffsetX;
-      float rockfordScreenY = imageY - boardOffsetY;
-
-      // Przesuwanie planszy w lewo
-      if (imageX < 100) {
-         boardOffsetX -= deltaX;
-         imageX += deltaX; // Aktualizacja pozycji postaci
-      }
-
-      // Przesuwanie planszy w prawo
-      if (imageX > mainLayout.getWidth() - 100) {
-         boardOffsetX += deltaX;
-         imageX -= deltaX; // Aktualizacja pozycji postaci
-      }
-
-      // Przesuwanie planszy w górę
-      if (imageY < 100) {
-         boardOffsetY -= deltaY;
-         imageY += deltaY; // Aktualizacja pozycji postaci
-      }
-
-      // Przesuwanie planszy w dół
-      if (imageY > mainLayout.getHeight() - 100) {
-         boardOffsetY += deltaY;
-         imageY -= deltaY; // Aktualizacja pozycji postaci
-      }
-
-      // Debug - Wyświetlanie pozycji na ekranie
-      System.out.println("rockfordScreenX: " + rockfordScreenX + ", rockfordScreenY: " + rockfordScreenY);
-      System.out.println("screenCenterX: " + screenCenterX + ", screenCenterY: " + screenCenterY);
-
-      // Zastosuj przesunięcie do planszy
-      boardGridLayout.setTranslationX(-boardOffsetX);
-      boardGridLayout.setTranslationY(boardOffsetY);
+   // Funkcja odtwarzająca dźwięki
+   private void playSound(int soundId) {
+      soundPool.play(soundId, 1, 1, 1, 0, 1f);
    }
-
-
-
-
-
 
 
    @Override

@@ -12,8 +12,8 @@
         android:id="@+id/controlRight"
         android:layout_width="100dp"
         android:layout_height="100dp"
-        android:layout_gravity="bottom|right"
-        android:layout_marginRight="17dp"
+        android:layout_gravity="bottom"
+        android:layout_marginLeft="237dp"
         android:layout_marginBottom="73dp"
         android:background="#66FFFFFF" />
 
@@ -22,8 +22,8 @@
         android:id="@+id/controlLeft"
         android:layout_width="100dp"
         android:layout_height="100dp"
-        android:layout_gravity="bottom|right"
-        android:layout_marginRight="127dp"
+        android:layout_gravity="bottom"
+        android:layout_marginLeft="127dp"
         android:layout_marginBottom="73dp"
         android:background="#66FFFFFF" />
 
@@ -49,6 +49,8 @@
         android:layout_marginBottom="17dp"
         android:background="#66FFFFFF" />
 
+
+
     <!-- Plansza -->
     <GridLayout
         android:id="@+id/boardGridLayout"
@@ -69,6 +71,7 @@
         android:visibility="visible"
         tools:visibility="visible" />
 
+
     <!-- Rockford -->
     <ImageView
         android:id="@+id/sprite_view"
@@ -77,6 +80,7 @@
         android:layout_gravity="center_horizontal|fill"
         android:contentDescription="TODO" />
 
+    <!-- Panel na dole z punktami i życiami -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -85,7 +89,7 @@
         android:layout_marginBottom="16dp"
         android:padding="8dp"
         android:background="#AA000000"
-        android:gravity="center">
+        android:gravity="left">
 
         <!-- Punkty -->
         <TextView
@@ -104,9 +108,27 @@
             android:layout_height="wrap_content"
             android:text="Życia: 3"
             android:textSize="18sp"
-            android:textColor="#FFFFFF"
-        />
-</LinearLayout>
+            android:textColor="#FFFFFF" />
+    </LinearLayout>
+    <TextView
+        android:id="@+id/gameOverText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+
+        android:text="Game Over"
+        android:textSize="50sp"
+        android:textColor="#FF0000"
+        android:visibility="gone"
+        android:layout_centerInParent="true"/>
+    <TextView
+        android:id="@+id/winText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="You Win!"
+        android:textSize="30sp"
+        android:textColor="#00FF00"
+        android:visibility="gone"
+        android:layout_centerInParent="true"/>
 
 
-    </FrameLayout>
+</FrameLayout>
